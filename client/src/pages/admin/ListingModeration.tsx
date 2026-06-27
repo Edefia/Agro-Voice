@@ -62,16 +62,23 @@ const ListingModeration: React.FC = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-surface-900 mb-6">Listing Moderation</h1>
+    <div className="max-w-5xl space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-surface-900 tracking-tight">Listings</h1>
+        <p className="text-sm text-surface-500 mt-2">Review, unpublish, or reject listings across the platform.</p>
+      </div>
 
-      <div className="mb-6 max-w-xs">
-        <Select
-          label="Filter by status"
-          options={STATUS_OPTIONS}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        />
+      <div className="card p-5 lg:p-6">
+        <h2 className="text-sm font-semibold text-surface-900">Filters</h2>
+        <p className="text-xs text-surface-500 mt-1 mb-4">Narrow the grid by listing status.</p>
+        <div className="max-w-xs">
+          <Select
+            label="Listing status"
+            options={STATUS_OPTIONS}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          />
+        </div>
       </div>
 
       {isLoading && (

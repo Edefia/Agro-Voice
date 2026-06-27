@@ -70,4 +70,34 @@
     scrollbar-width: thin;
     scrollbar-color: theme('colors.surface.300') transparent;
   }
+
+  /* Agent & admin consoles — warm cream shell */
+  .agent-console,
+  .admin-console {
+    background-color: theme('colors.cream.100');
+    color: theme('colors.surface.900');
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .agent-console .card,
+  .admin-console .card {
+    background-color: theme('colors.cream.50');
+    border-color: theme('colors.cream.200');
+    box-shadow: none;
+  }
+
+  .agent-console .input-base,
+  .admin-console .input-base {
+    background-color: theme('colors.cream.50');
+    border-color: theme('colors.cream.300');
+    color: theme('colors.surface.900');
+  }
+
+  .agent-console .input-base:focus,
+  .admin-console .input-base:focus {
+    border-color: theme('colors.primary.500');
+    outline: none;
+    box-shadow: 0 0 0 2px theme('colors.primary.500 / 20%');
+  }
 }

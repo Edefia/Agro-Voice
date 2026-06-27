@@ -39,10 +39,15 @@ const AgentManagement: React.FC = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-surface-900 mb-6">Agent Management</h1>
+    <div className="max-w-5xl space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-surface-900 tracking-tight">Agents</h1>
+        <p className="text-sm text-surface-500 mt-2">Search field agents and manage their account status.</p>
+      </div>
 
-      <div className="mb-6">
+      <div className="card p-5 lg:p-6">
+        <h2 className="text-sm font-semibold text-surface-900">Search</h2>
+        <p className="text-xs text-surface-500 mt-1 mb-4">Filter by name or phone number.</p>
         <SearchInput onSearch={setSearch} placeholder="Search agents by name or phone…" />
       </div>
 
@@ -74,20 +79,20 @@ const AgentManagement: React.FC = () => {
         <>
           <div className="hidden md:block card overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-surface-50 border-b border-surface-200">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-surface-600">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-surface-600">Phone</th>
-                  <th className="text-left px-4 py-3 font-medium text-surface-600">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-surface-600">Farmers</th>
-                  <th className="text-right px-4 py-3 font-medium text-surface-600">Actions</th>
+              <thead>
+                <tr className="border-b border-cream-200 text-left text-xs text-surface-500">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Phone</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Farmers</th>
+                  <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-100">
+              <tbody className="divide-y divide-cream-200">
                 {agents.map((agent) => (
-                  <tr key={agent._id} className="hover:bg-surface-50">
-                    <td className="px-4 py-3 font-medium">{agent.name}</td>
-                    <td className="px-4 py-3">{agent.phone ?? '—'}</td>
+                  <tr key={agent._id} className="hover:bg-cream-150 transition-colors">
+                    <td className="px-4 py-3 font-medium text-surface-900">{agent.name}</td>
+                    <td className="px-4 py-3 text-surface-600">{agent.phone ?? '—'}</td>
                     <td className="px-4 py-3">
                       <Badge color={agent.status === 'ACTIVE' ? 'green' : 'red'}>
                         {agent.status === 'ACTIVE' ? 'Active' : 'Suspended'}
