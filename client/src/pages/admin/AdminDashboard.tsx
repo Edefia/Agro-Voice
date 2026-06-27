@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin.api';
-import { ErrorAlert, Skeleton } from '../../components/shared';
+import { Button, ErrorAlert, Skeleton } from '../../components/shared';
 
 const STAT_CARDS = [
   { key: 'totalFarmers' as const, label: 'Total farmers' },
@@ -19,47 +19,47 @@ const AdminDashboard: React.FC = () => {
     queryFn: adminApi.getDashboardStats,
   });
 
-  if (isLoading) {
-    return (
+  return (
+    <div className="max-w-5xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-surface-900 mb-6">Admin Dashboard</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <h1 className="text-2xl font-semibold text-surface-900 tracking-tight">Overview</h1>
+        <p className="text-sm text-surface-500 mt-2 max-w-2xl leading-relaxed">
+          Platform-wide totals for farmers, agents, listings, orders, and AI health.
+        </p>
+      </div>
+
+      {isLoading && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {STAT_CARDS.map((card) => (
-            <div key={card.key} className="card p-6">
-              <Skeleton className="h-4 w-24 mb-3" />
-              <Skeleton className="h-10 w-16" />
+            <div key={card.key} className="card px-4 py-4">
+              <Skeleton className="h-3 w-20 mb-3" />
+              <Skeleton className="h-8 w-12" />
             </div>
           ))}
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (isError || !data) {
-    return (
-      <div>
-        <h1 className="text-2xl font-bold text-surface-900 mb-6">Admin Dashboard</h1>
+      {isError && (
         <ErrorAlert>
           <p className="mb-3">Could not load dashboard statistics.</p>
-          <button type="button" className="text-sm font-medium underline" onClick={() => refetch()}>
+          <Button variant="secondary" size="sm" onClick={() => refetch()}>
             Retry
-          </button>
+          </Button>
         </ErrorAlert>
-      </div>
-    );
-  }
+      )}
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-surface-900 mb-6">Admin Dashboard</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {STAT_CARDS.map((card) => (
-          <div key={card.key} className="card p-6">
-            <p className="text-sm text-surface-500 mb-2">{card.label}</p>
-            <p className="text-4xl font-bold text-surface-900">{data[card.key]}</p>
-          </div>
-        ))}
-      </div>
+      {!isLoading && !isError && data && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {STAT_CARDS.map((card) => (
+            <div key={card.key} className="card px-4 py-4">
+              <p className="text-xs text-surface-500">{card.label}</p>
+              <p className="text-2xl font-semibold text-surface-900 mt-1 tabular-nums">
+                {data[card.key]}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

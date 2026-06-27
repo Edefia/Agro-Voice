@@ -40,7 +40,7 @@ const AIRunRow: React.FC<{ run: AIRun }> = ({ run }) => {
   const truncated = errorMsg.length > 80;
 
   return (
-    <tr className="hover:bg-surface-50">
+    <tr className="hover:bg-cream-150 transition-colors">
       <td className="px-4 py-3 text-sm">{run.apiType}</td>
       <td className="px-4 py-3 text-sm">
         {run.relatedFarmerName ?? run.relatedListingTitle ?? '—'}
@@ -88,22 +88,29 @@ const AIMonitoring: React.FC = () => {
   });
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-surface-900 mb-6">AI Monitoring</h1>
+    <div className="max-w-5xl space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-surface-900 tracking-tight">AI Monitoring</h1>
+        <p className="text-sm text-surface-500 mt-2">Track speech, vision, and chat API runs across the platform.</p>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 max-w-xl">
-        <Select
-          label="Status"
-          options={STATUS_OPTIONS}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        />
-        <Select
-          label="API type"
-          options={TYPE_OPTIONS}
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        />
+      <div className="card p-5 lg:p-6">
+        <h2 className="text-sm font-semibold text-surface-900">Filters</h2>
+        <p className="text-xs text-surface-500 mt-1 mb-4">Filter runs by status and API type.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+          <Select
+            label="Status"
+            options={STATUS_OPTIONS}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          />
+          <Select
+            label="API type"
+            options={TYPE_OPTIONS}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          />
+        </div>
       </div>
 
       {isLoading && (
@@ -130,17 +137,17 @@ const AIMonitoring: React.FC = () => {
       {!isLoading && !isError && runs.length > 0 && (
         <div className="card overflow-x-auto">
           <table className="w-full text-sm min-w-[720px]">
-            <thead className="bg-surface-50 border-b border-surface-200">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-surface-600">API type</th>
-                <th className="text-left px-4 py-3 font-medium text-surface-600">Related</th>
-                <th className="text-left px-4 py-3 font-medium text-surface-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-surface-600">Attempts</th>
-                <th className="text-left px-4 py-3 font-medium text-surface-600">Error</th>
-                <th className="text-left px-4 py-3 font-medium text-surface-600">Date</th>
+            <thead>
+              <tr className="border-b border-cream-200 text-left text-xs text-surface-500">
+                <th className="px-4 py-3 font-medium">API type</th>
+                <th className="px-4 py-3 font-medium">Related</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Attempts</th>
+                <th className="px-4 py-3 font-medium">Error</th>
+                <th className="px-4 py-3 font-medium">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-100">
+            <tbody className="divide-y divide-cream-200">
               {runs.map((run) => (
                 <AIRunRow key={run._id} run={run} />
               ))}
