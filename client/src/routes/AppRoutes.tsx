@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '../components/shared/ProtectedRoute';
 import { Spinner } from '../components/shared/Spinner';
 
@@ -27,20 +27,21 @@ const BuyerOrderDetails = lazy(() => import('../pages/buyer/BuyerOrderDetails'))
 const BuyerProfile = lazy(() => import('../pages/buyer/BuyerProfile'));
 
 // ─── Agent Pages (DEV 2 owns) ───────────────────────────────
-// const AgentDashboard = lazy(() => import('../pages/agent/AgentDashboard'));
-// const FarmerList = lazy(() => import('../pages/agent/FarmerList'));
-// const FarmerRegister = lazy(() => import('../pages/agent/FarmerRegister'));
-// const FarmerProfile = lazy(() => import('../pages/agent/FarmerProfile'));
-// const VoiceListingWizard = lazy(() => import('../pages/agent/VoiceListingWizard'));
-// const ListingsList = lazy(() => import('../pages/agent/ListingsList'));
-// const AgentOrders = lazy(() => import('../pages/agent/AgentOrders'));
+const AgentDashboard = lazy(() => import('../pages/agent/AgentDashboard'));
+const FarmerList = lazy(() => import('../pages/agent/FarmerList'));
+const FarmerRegister = lazy(() => import('../pages/agent/FarmerRegister'));
+const FarmerProfile = lazy(() => import('../pages/agent/FarmerProfile'));
+const VoiceListingWizard = lazy(() => import('../pages/agent/VoiceListingWizard'));
+const ListingsList = lazy(() => import('../pages/agent/ListingsList'));
+const AgentOrders = lazy(() => import('../pages/agent/AgentOrders'));
 
 // ─── Admin Pages (DEV 2 owns) ───────────────────────────────
-// const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
-// const AgentManagement = lazy(() => import('../pages/admin/AgentManagement'));
-// const ListingModeration = lazy(() => import('../pages/admin/ListingModeration'));
-// const AIMonitoring = lazy(() => import('../pages/admin/AIMonitoring'));
-// const ComplaintManagement = lazy(() => import('../pages/admin/ComplaintManagement'));
+const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
+const AgentManagement = lazy(() => import('../pages/admin/AgentManagement'));
+const AdminFarmers = lazy(() => import('../pages/admin/AdminFarmers'));
+const ListingModeration = lazy(() => import('../pages/admin/ListingModeration'));
+const AIMonitoring = lazy(() => import('../pages/admin/AIMonitoring'));
+const ComplaintManagement = lazy(() => import('../pages/admin/ComplaintManagement'));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -71,7 +72,6 @@ const AppRoutes: React.FC = () => (
       {/* ══════════════════════════════════════════════════════════
        *  AGENT ROUTES — FIELD_AGENT role required
        *  Owner: DEV 2
-       *  Uncomment as Dev 2 builds pages
        * ══════════════════════════════════════════════════════════ */}
       <Route
         path="/agent/*"
@@ -81,20 +81,20 @@ const AppRoutes: React.FC = () => (
           </ProtectedRoute>
         }
       >
-        {/* DEV 2: Add agent sub-routes here */}
-        {/* <Route path="dashboard" element={<AgentDashboard />} /> */}
-        {/* <Route path="farmers" element={<FarmerList />} /> */}
-        {/* <Route path="farmers/new" element={<FarmerRegister />} /> */}
-        {/* <Route path="farmers/:farmerId" element={<FarmerProfile />} /> */}
-        {/* <Route path="farmers/:farmerId/create-listing" element={<VoiceListingWizard />} /> */}
-        {/* <Route path="listings" element={<ListingsList />} /> */}
-        {/* <Route path="orders" element={<AgentOrders />} /> */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AgentDashboard />} />
+        <Route path="farmers" element={<FarmerList />} />
+        <Route path="farmers/new" element={<FarmerRegister />} />
+        <Route path="farmers/:farmerId/edit" element={<FarmerRegister />} />
+        <Route path="farmers/:farmerId/create-listing" element={<VoiceListingWizard />} />
+        <Route path="farmers/:farmerId" element={<FarmerProfile />} />
+        <Route path="listings" element={<ListingsList />} />
+        <Route path="orders" element={<AgentOrders />} />
       </Route>
 
       {/* ══════════════════════════════════════════════════════════
        *  ADMIN ROUTES — ADMIN role required
        *  Owner: DEV 2
-       *  Uncomment as Dev 2 builds pages
        * ══════════════════════════════════════════════════════════ */}
       <Route
         path="/admin/*"
@@ -104,12 +104,13 @@ const AppRoutes: React.FC = () => (
           </ProtectedRoute>
         }
       >
-        {/* DEV 2: Add admin sub-routes here */}
-        {/* <Route path="dashboard" element={<AdminDashboard />} /> */}
-        {/* <Route path="agents" element={<AgentManagement />} /> */}
-        {/* <Route path="listings" element={<ListingModeration />} /> */}
-        {/* <Route path="ai-monitoring" element={<AIMonitoring />} /> */}
-        {/* <Route path="complaints" element={<ComplaintManagement />} /> */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="agents" element={<AgentManagement />} />
+        <Route path="farmers" element={<AdminFarmers />} />
+        <Route path="listings" element={<ListingModeration />} />
+        <Route path="ai-runs" element={<AIMonitoring />} />
+        <Route path="complaints" element={<ComplaintManagement />} />
       </Route>
 
       {/* ══════════════════════════════════════════════════════════
