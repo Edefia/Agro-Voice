@@ -1,10 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
 import { Prisma, UserRole, AudioMessageType } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/AppError';
 import { synthesizeSpeech } from '../../services/snwolley/text-to-speech.service';
+import { uploadMedia } from '../../services/storage/storage.service';
 import { buildMessage } from './notification-messages';
 
 export interface Actor {
@@ -22,13 +20,7 @@ const audioSelect = {
   createdAt: true,
 } satisfies Prisma.GeneratedAudioSelect;
 
-const GENERATED_AUDIO_DIR = path.join(process.cwd(), 'uploads', 'generated-audio');
-
-function relativeAudioPath(filename: string): string {
-  return path.posix.join('uploads', 'generated-audio', filename);
-}
-
-// Core: persist the record, call TTS, save the WAV, and log an AiProcessingRun.
+// Core: persist the record, call TTS, store the WAV, and log an AiProcessingRun.
 async function generate(
   data: {
     farmerId: number;
@@ -65,13 +57,11 @@ async function generate(
 
   try {
     const buffer = await synthesizeSpeech(data.text);
-    await fs.promises.mkdir(GENERATED_AUDIO_DIR, { recursive: true });
-    const filename = `${crypto.randomUUID()}.wav`;
-    await fs.promises.writeFile(path.join(GENERATED_AUDIO_DIR, filename), buffer);
+    const stored = await uploadMedia(buffer, 'generated-audio', '.wav');
 
     const updated = await prisma.generatedAudio.update({
       where: { id: audio.id },
-      data: { audioPath: relativeAudioPath(filename), processingStatus: 'COMPLETED' },
+      data: { audioPath: stored.url, processingStatus: 'COMPLETED' },
       select: audioSelect,
     });
 

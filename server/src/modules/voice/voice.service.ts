@@ -8,7 +8,8 @@ import {
 } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/AppError';
-import { transcribeAudio } from '../../services/snwolley/speech-to-text.service';
+import { transcribeAudioBuffer } from '../../services/snwolley/speech-to-text.service';
+import { fetchMedia } from '../../services/storage/storage.service';
 import {
   CreateResponseInput,
   CreateSessionInput,
@@ -155,15 +156,15 @@ async function resolveOwnedResponse(actor: Actor, responseUuid: string) {
 }
 
 // Orchestrates a transcription attempt with full AiProcessingRun logging.
-async function runTranscription(responseId: number, audioRelPath: string, language: string | null) {
-  const absolutePath = path.join(process.cwd(), audioRelPath);
+async function runTranscription(responseId: number, audioRef: string, language: string | null) {
+  const filename = path.basename(audioRef);
 
   const run = await prisma.aiProcessingRun.create({
     data: {
       processableType: 'VoiceResponse',
       processableId: responseId,
       apiType: 'SPEECH_TO_TEXT',
-      requestSummary: `STT for ${path.basename(audioRelPath)}`,
+      requestSummary: `STT for ${filename}`,
       processingStatus: ProcessingStatus.PROCESSING,
       attempts: 1,
       startedAt: new Date(),
@@ -180,7 +181,8 @@ async function runTranscription(responseId: number, audioRelPath: string, langua
   });
 
   try {
-    const result = await transcribeAudio(absolutePath, language ?? undefined);
+    const buffer = await fetchMedia(audioRef);
+    const result = await transcribeAudioBuffer(buffer, filename, language ?? undefined);
 
     const updated = await prisma.voiceResponse.update({
       where: { id: responseId },

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { sendCreated, sendSuccess } from '../../utils/apiResponse';
 import { AppError } from '../../utils/AppError';
-import { audioRelativePath } from '../../middleware/upload.middleware';
+import { audioExtension } from '../../middleware/upload.middleware';
+import { uploadMedia } from '../../services/storage/storage.service';
 import {
   createSessionSchema,
   createResponseSchema,
@@ -46,15 +47,24 @@ export async function response(req: Request, res: Response): Promise<void> {
   const actor = getActor(req);
   const input = createResponseSchema.parse(req.body);
 
-  const audioRelPath = req.file ? audioRelativePath(req.file.filename) : null;
-  if (!audioRelPath && !input.transcript) {
+  if (!req.file && !input.transcript) {
     throw AppError.badRequest(
       'Provide an audio file or a manual transcript',
       'NO_AUDIO_OR_TRANSCRIPT'
     );
   }
 
-  const created = await addResponse(actor, param(req, 'sessionId'), input, audioRelPath);
+  let audioRef: string | null = null;
+  if (req.file) {
+    const stored = await uploadMedia(
+      req.file.buffer,
+      'audio',
+      audioExtension(req.file.mimetype)
+    );
+    audioRef = stored.url;
+  }
+
+  const created = await addResponse(actor, param(req, 'sessionId'), input, audioRef);
   sendCreated(res, { response: created }, 'Voice response saved');
 }
 

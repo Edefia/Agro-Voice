@@ -57,8 +57,22 @@ function extractSessionId(data: any): string | null {
   return data?.session_id ?? data?.sessionId ?? null;
 }
 
+// Reads a local file and transcribes it (kept for tests / local fallback).
 export async function transcribeAudio(
   absoluteFilePath: string,
+  language?: string
+): Promise<SttResult> {
+  if (!fs.existsSync(absoluteFilePath)) {
+    throw new AppError('Audio file not found', 404, 'AUDIO_NOT_FOUND');
+  }
+  const buffer = await fs.promises.readFile(absoluteFilePath);
+  return transcribeAudioBuffer(buffer, path.basename(absoluteFilePath), language);
+}
+
+// Transcribes an in-memory audio buffer (used with Cloudinary-backed storage).
+export async function transcribeAudioBuffer(
+  buffer: Buffer,
+  filename: string,
   language?: string
 ): Promise<SttResult> {
   if (!env.SNWOLLEY_HACKATHON_API_KEY) {
@@ -69,19 +83,14 @@ export async function transcribeAudio(
     );
   }
 
-  if (!fs.existsSync(absoluteFilePath)) {
-    throw new AppError('Audio file not found', 404, 'AUDIO_NOT_FOUND');
-  }
-
-  const buffer = await fs.promises.readFile(absoluteFilePath);
   if (buffer.byteLength === 0) {
     throw new AppError('Audio recording is empty', 422, 'EMPTY_AUDIO');
   }
 
-  const ext = path.extname(absoluteFilePath);
+  const ext = path.extname(filename) || '.wav';
   const form = new FormData();
   const blob = new Blob([new Uint8Array(buffer)], { type: mimeForExtension(ext) });
-  form.append(AUDIO_FIELD, blob, path.basename(absoluteFilePath));
+  form.append(AUDIO_FIELD, blob, path.basename(filename) || `audio${ext}`);
   form.append('language', language || DEFAULT_LANGUAGE);
 
   try {

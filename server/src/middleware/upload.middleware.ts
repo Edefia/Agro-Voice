@@ -1,16 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
 import { Request } from 'express';
 import multer, { FileFilterCallback } from 'multer';
 import { AppError } from '../utils/AppError';
-
-const UPLOADS_ROOT = path.join(process.cwd(), 'uploads');
-
-function ensureDir(dir: string): string {
-  fs.mkdirSync(dir, { recursive: true });
-  return dir;
-}
 
 // Map of accepted MIME types to a canonical, safe file extension. We never
 // trust the original extension - the stored extension is derived here.
@@ -40,20 +30,6 @@ const IMAGE_MIME_EXTENSIONS: Record<string, string> = {
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // 25 MB
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
 
-function makeStorage(subdir: string, extMap: Record<string, string>) {
-  return multer.diskStorage({
-    destination: (_req, _file, cb) => {
-      cb(null, ensureDir(path.join(UPLOADS_ROOT, subdir)));
-    },
-    filename: (_req, file, cb) => {
-      // Safe, unguessable filename - original name is discarded.
-      const ext = extMap[file.mimetype] ?? '.bin';
-      const name = `${Date.now()}-${crypto.randomBytes(12).toString('hex')}${ext}`;
-      cb(null, name);
-    },
-  });
-}
-
 function mimeFilter(extMap: Record<string, string>) {
   return (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
     if (extMap[file.mimetype]) {
@@ -70,20 +46,24 @@ function mimeFilter(extMap: Record<string, string>) {
   };
 }
 
+// Files are held in memory so they can be streamed to Cloudinary (or written
+// to local disk as a fallback) by the storage service.
 export const audioUpload = multer({
-  storage: makeStorage('audio', AUDIO_MIME_EXTENSIONS),
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_AUDIO_BYTES },
   fileFilter: mimeFilter(AUDIO_MIME_EXTENSIONS),
 });
 
-export const audioRelativePath = (filename: string): string =>
-  path.posix.join('uploads', 'audio', filename);
-
 export const imageUpload = multer({
-  storage: makeStorage('images', IMAGE_MIME_EXTENSIONS),
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_IMAGE_BYTES },
   fileFilter: mimeFilter(IMAGE_MIME_EXTENSIONS),
 });
 
-export const imageRelativePath = (filename: string): string =>
-  path.posix.join('uploads', 'images', filename);
+export function audioExtension(mimetype: string): string {
+  return AUDIO_MIME_EXTENSIONS[mimetype] ?? '.bin';
+}
+
+export function imageExtension(mimetype: string): string {
+  return IMAGE_MIME_EXTENSIONS[mimetype] ?? '.bin';
+}

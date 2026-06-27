@@ -24,6 +24,12 @@ const envSchema = z.object({
   SNWOLLEY_AGENT_API_KEY: z.string().optional().default(''),
   SNWOLLEY_AGENT_ID: z.string().optional().default(''),
   SNWOLLEY_TIMEOUT: z.coerce.number().int().positive().default(60000),
+
+  // Cloudinary media storage (optional - falls back to local disk if unset).
+  CLOUDINARY_CLOUD_NAME: z.string().optional().default(''),
+  CLOUDINARY_API_KEY: z.string().optional().default(''),
+  CLOUDINARY_API_SECRET: z.string().optional().default(''),
+  CLOUDINARY_FOLDER: z.string().optional().default('agrovoice'),
 });
 
 const parsed = envSchema.safeParse(process.env);

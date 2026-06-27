@@ -7,7 +7,11 @@ import {
 } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/AppError';
-import { analyseImageFile } from '../../services/snwolley/vision.service';
+import {
+  analyseImageBuffer,
+  analyseImageUrl,
+} from '../../services/snwolley/vision.service';
+import { fetchMedia, isRemote } from '../../services/storage/storage.service';
 import {
   structureObservation,
   computeCropMatch,
@@ -110,14 +114,14 @@ async function resolveOwnedImage(actor: Actor, imageUuid: string) {
 export async function analyseImage(actor: Actor, imageUuid: string) {
   const image = await resolveOwnedImage(actor, imageUuid);
   const expectedCrop = image.produceListing.cropCategory?.name ?? null;
-  const absolutePath = path.join(process.cwd(), image.imagePath);
+  const filename = path.basename(image.imagePath);
 
   const run = await prisma.aiProcessingRun.create({
     data: {
       processableType: 'ListingImage',
       processableId: image.id,
       apiType: 'VISION',
-      requestSummary: `Vision for ${path.basename(image.imagePath)}`,
+      requestSummary: `Vision for ${filename}`,
       processingStatus: 'PROCESSING',
       attempts: 1,
       startedAt: new Date(),
@@ -126,7 +130,15 @@ export async function analyseImage(actor: Actor, imageUuid: string) {
   });
 
   try {
-    const vision = await analyseImageFile(absolutePath, CROP_ANALYSIS_PROMPT);
+    // Remote images (Cloudinary) are passed to Vision by URL; local files are
+    // fetched and uploaded as a buffer.
+    const vision = isRemote(image.imagePath)
+      ? await analyseImageUrl(image.imagePath, CROP_ANALYSIS_PROMPT)
+      : await analyseImageBuffer(
+          await fetchMedia(image.imagePath),
+          filename,
+          CROP_ANALYSIS_PROMPT
+        );
     const { observation } = await structureObservation(
       vision.description,
       expectedCrop

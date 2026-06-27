@@ -241,7 +241,7 @@ Generates spoken (WAV) notifications for farmers via Snwolley TTS.
 | PATCH | `/generated-audio/:audioId/played` | — | `{ audio }` (sets `playedAt`) |
 
 - `audio`: `{ uuid, messageType, textContent, audioPath, processingStatus, playedAt, createdAt }`.
-- `processingStatus`: `PENDING | PROCESSING | COMPLETED | FAILED`. The WAV is at `audioPath` (e.g. `uploads/generated-audio/<id>.wav`) — serve from `http://localhost:5000/<audioPath>`.
+- `processingStatus`: `PENDING | PROCESSING | COMPLETED | FAILED`. The WAV is at `audioPath` — a Cloudinary HTTPS URL (or a relative `uploads/generated-audio/<id>.wav` path in local-fallback mode). See "Media URLs (Cloudinary)" below.
 - Buyers cannot access generated audio (farmer-facing). TTS failures return handled `TTS_*` codes, never a 500.
 
 ### 3.13 Administration (auth + ADMIN)
@@ -272,7 +272,14 @@ form.append('audio', fileBlob, 'answer.wav');
 await apiClient.post(`/voice-sessions/${sessionId}/responses`, form);
 ```
 
-Uploaded files are served read-only from `/uploads/...` (the API returns relative paths like `uploads/images/abc.png`). Prefix with the server origin to display, e.g. `http://localhost:5000/uploads/images/abc.png`.
+### Media URLs (Cloudinary)
+
+Uploaded audio/images and generated TTS audio are stored on **Cloudinary**. The API returns the full media reference in `imagePath` / `audioPath`:
+
+- When Cloudinary is configured, this is an absolute HTTPS URL (e.g. `https://res.cloudinary.com/<cloud>/image/upload/.../agrovoice/images/abc.png`) — use it directly as `src`/`href`, no prefixing needed.
+- As a fallback (when Cloudinary env vars are unset), the API returns a relative path like `uploads/images/abc.png`, served from the server origin (e.g. `http://localhost:5000/uploads/images/abc.png`).
+
+Frontend rule of thumb: if the value starts with `http`, use it as-is; otherwise prefix with the server origin.
 
 ---
 

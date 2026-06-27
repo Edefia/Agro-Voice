@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { sendCreated, sendSuccess } from '../../utils/apiResponse';
 import { AppError } from '../../utils/AppError';
-import { imageRelativePath } from '../../middleware/upload.middleware';
+import { imageExtension } from '../../middleware/upload.middleware';
+import { uploadMedia } from '../../services/storage/storage.service';
 import { uploadImageSchema, reviewImageSchema } from './images.validators';
 import {
   Actor,
@@ -26,10 +27,15 @@ export async function upload(req: Request, res: Response): Promise<void> {
     throw AppError.badRequest('An image file is required', 'NO_IMAGE');
   }
   const { isPrimary } = uploadImageSchema.parse(req.body ?? {});
+  const stored = await uploadMedia(
+    req.file.buffer,
+    'image',
+    imageExtension(req.file.mimetype)
+  );
   const image = await uploadImage(
     actor,
     param(req, 'listingId'),
-    imageRelativePath(req.file.filename),
+    stored.url,
     isPrimary
   );
   sendCreated(res, { image }, 'Image uploaded');

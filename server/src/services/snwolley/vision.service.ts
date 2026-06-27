@@ -49,10 +49,7 @@ function extractDescription(data: any): string {
   return typeof candidate === 'string' ? candidate.trim() : '';
 }
 
-export async function analyseImageFile(
-  absoluteFilePath: string,
-  prompt: string
-): Promise<VisionResult> {
+function ensureConfigured(): void {
   if (!env.SNWOLLEY_HACKATHON_API_KEY) {
     throw new AppError(
       'Vision is not configured. Review the image manually.',
@@ -60,24 +57,18 @@ export async function analyseImageFile(
       'VISION_NOT_CONFIGURED'
     );
   }
-  if (!fs.existsSync(absoluteFilePath)) {
-    throw new AppError('Image file not found', 404, 'IMAGE_NOT_FOUND');
-  }
+}
 
-  const buffer = await fs.promises.readFile(absoluteFilePath);
-  if (buffer.byteLength === 0) {
-    throw new AppError('Image file is empty', 422, 'EMPTY_IMAGE');
-  }
-
-  const ext = path.extname(absoluteFilePath);
-  const form = new FormData();
-  const blob = new Blob([new Uint8Array(buffer)], { type: mimeForExtension(ext) });
-  form.append(IMAGE_FIELD, blob, path.basename(absoluteFilePath));
-  form.append('prompt', prompt);
-
+async function postVision(
+  body: FormData | Record<string, unknown>,
+  isForm: boolean
+): Promise<VisionResult> {
   try {
-    const response = await hackathonClient.post(VISION_ENDPOINT, form, {
-      headers: { ...hackathonAuthHeader() },
+    const response = await hackathonClient.post(VISION_ENDPOINT, body, {
+      headers: {
+        ...hackathonAuthHeader(),
+        ...(isForm ? {} : { 'Content-Type': 'application/json' }),
+      },
     });
 
     const description = extractDescription(response.data);
@@ -88,12 +79,53 @@ export async function analyseImageFile(
         'VISION_EMPTY'
       );
     }
-
     return { description, raw: response.data };
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw mapVisionError(error);
   }
+}
+
+// Reads a local file and analyses it (kept for tests / local fallback).
+export async function analyseImageFile(
+  absoluteFilePath: string,
+  prompt: string
+): Promise<VisionResult> {
+  ensureConfigured();
+  if (!fs.existsSync(absoluteFilePath)) {
+    throw new AppError('Image file not found', 404, 'IMAGE_NOT_FOUND');
+  }
+  const buffer = await fs.promises.readFile(absoluteFilePath);
+  return analyseImageBuffer(buffer, path.basename(absoluteFilePath), prompt);
+}
+
+// Analyses an in-memory image buffer (used with Cloudinary-backed storage).
+export async function analyseImageBuffer(
+  buffer: Buffer,
+  filename: string,
+  prompt: string
+): Promise<VisionResult> {
+  ensureConfigured();
+  if (buffer.byteLength === 0) {
+    throw new AppError('Image file is empty', 422, 'EMPTY_IMAGE');
+  }
+
+  const ext = path.extname(filename) || '.jpg';
+  const form = new FormData();
+  const blob = new Blob([new Uint8Array(buffer)], { type: mimeForExtension(ext) });
+  form.append(IMAGE_FIELD, blob, path.basename(filename) || `image${ext}`);
+  form.append('prompt', prompt);
+
+  return postVision(form, true);
+}
+
+// Analyses a publicly reachable image URL (e.g. a Cloudinary secure URL).
+export async function analyseImageUrl(
+  imageUrl: string,
+  prompt: string
+): Promise<VisionResult> {
+  ensureConfigured();
+  return postVision({ image_url: imageUrl, prompt }, false);
 }
 
 function mapVisionError(error: unknown): AppError {
